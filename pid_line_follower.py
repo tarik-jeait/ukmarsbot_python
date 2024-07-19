@@ -343,9 +343,9 @@ time.sleep(2)
 #encodertest()
 
 #BasicLineFollower(cytron_board)
-#PdLineFollower(cytron_board)
+PdLineFollower(cytron_board)
 
-PdLineFollowerFast(cytron_board)
+#PdLineFollowerFast(cytron_board)
 
 cytron_board.LEFT_LED.value(0) # switch off sensor1 LED on line folllower board
 cytron_board.RIGHT_LED.value(0) # switch off sensor2 LED on line folllower board

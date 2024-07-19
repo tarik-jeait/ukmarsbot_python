@@ -1,3 +1,7 @@
+# ukmarsbot.org version 1.3 upgraded to 3.3V
+# Pins definition for Cytron Maker Nano RP2040
+# 
+
 from machine import Pin, ADC, PWM
 
 class CytronMakerNanoRP2040:
