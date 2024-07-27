@@ -67,7 +67,7 @@ def readSensors(board):
 def BasicLineFollower(board): #Black Line Follow on White surface
     global leftside,leftside_dark,leftside_light, leftfront,leftfront_dark,leftfront_light, rightfront,rightfront_dark,rightfront_light, rightside,rightside_dark,rightside_light, leftspeed, rightspeed
     updateTime = time.time() + updateInterval
-    basespeed = 30000
+    basespeed = 10000
     adjustment = 0
     prevdiff = 0
     board.RMOTOR_DIR.value(1)  # set the right motor direction
@@ -94,10 +94,10 @@ def BasicLineFollower(board): #Black Line Follow on White surface
             print("left:(%d)-left front:(%d)-right front:(%d)-right:(%d)-sum:(%d)-diff:(%d)"% (leftside,leftfront,rightfront,rightside,gSensorSum,gSensorDifference))
         
         if(gSensorDifference > 2000):
-            adjustment = 10000
+            adjustment = 5000
         
         if(gSensorDifference < -2000):
-            adjustment = -10000
+            adjustment = -5000
         
         leftspeed = int(basespeed + adjustment)
         rightspeed = int(basespeed - adjustment)

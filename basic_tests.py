@@ -105,6 +105,6 @@ def motorsBasicTest(board,direction):
 
 
 cytron_board = CytronMakerNanoRP2040()
-#sensorsLineFollowerTest(cytron_board,5)
+sensorsLineFollowerTest(cytron_board,5)
 motorsBasicTest(cytron_board,0)
-#motorsBasicTest(cytron_board,180)
+motorsBasicTest(cytron_board,180)
