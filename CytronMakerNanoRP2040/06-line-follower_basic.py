@@ -1,4 +1,4 @@
-from CytronMakerNanoRP2040 import CytronMakerNanoRP2040 
+from _CytronMakerNanoRP2040 import CytronMakerNanoRP2040 
 from machine import Pin, ADC, PWM
 import neopixel
 import time

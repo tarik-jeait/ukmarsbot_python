@@ -1,12 +1,10 @@
 from machine import Pin, ADC, PWM
-from CytronMakerNanoRP2040 import CytronMakerNanoRP2040
+from _CytronMakerNanoRP2040 import CytronMakerNanoRP2040
 import time
 import math 
 
 # Global variable definitions
 global leftside,leftside_dark,leftside_light, leftfront,leftfront_dark,leftfront_light, rightfront,rightfront_dark,rightfront_light, rightside,rightside_dark,rightside_light
-global l1count, l2count, r1count, r2count, prevleft1, prevleft2, prevright1, prevright2
-global bit0, bit1, bit2, bit3
 
 
 # LINE FOLLOWER
@@ -77,3 +75,4 @@ def sensorsLineFollowerTest(board,retries_count):
 
 cytron_board = CytronMakerNanoRP2040()
 sensorsLineFollowerTest(cytron_board,5)
+#sensorsLineFollowerTest(cytron_board,5)

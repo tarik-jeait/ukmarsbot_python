@@ -1,5 +1,5 @@
 from machine import Pin, UART
-from CytronMakerNanoRP2040 import CytronMakerNanoRP2040
+from _CytronMakerNanoRP2040 import CytronMakerNanoRP2040
 import time
 import math 
 

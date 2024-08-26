@@ -53,7 +53,9 @@ class CytronMakerNanoRP2040:
         self.LMOTOR_PWM.duty_u16(0) # left motor speed - range is 0 to 65535
         self.RMOTOR_PWM.duty_u16(0) # right motor speed - range is 0 to 65535
 
-        self.Leftenc1 = Pin(2, Pin.IN) # encoder pins
-        self.Leftenc2 = Pin(4, Pin.IN)
-        self.Rightenc1 = Pin(3, Pin.IN)
-        self.Rightenc2 = Pin(5, Pin.IN)
+        self.ENCODER_LEFT_CLK = Pin(2, Pin.IN) # encoder pins
+        self.ENCODER_LEFT_B = Pin(4, Pin.IN)
+        self.ENCODER_RIGHT_CLK = Pin(3, Pin.IN)
+        self.ENCODER_RIGHT_B = Pin(5, Pin.IN)
+        
+        
