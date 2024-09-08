@@ -20,7 +20,6 @@ gSensorCTE=0
 updateTime=0
 updateInterval = 2;  # in milliseconds
 
-
 def sensorsLineFollowerTest(board,retries_count):
     print("sensors basic reading for Line Follower ........")
     updateTime = time.time() + updateInterval

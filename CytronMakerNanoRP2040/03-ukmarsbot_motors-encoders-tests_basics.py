@@ -11,6 +11,7 @@ left_oldA = 0
 left_oldB = 0
 right_oldA = 0
 right_oldB = 0
+
 # encoder polarity is either 1 or -1 and is used to account for reversal of the encoder phases
 ENCODER_LEFT_POLARITY = 1
 ENCODER_RIGHT_POLARITY = 1
@@ -21,8 +22,7 @@ m_right_counter = 0
 updateTime=0
 updateInterval = 2;  # in milliseconds
 
-
-BASE_SPEED = 10000
+BASE_SPEED = 30000
 
 def playTone(board):    
     # Play tone

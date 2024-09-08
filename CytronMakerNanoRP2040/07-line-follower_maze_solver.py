@@ -1,10 +1,10 @@
-from CytronMakerNanoRP2040 import CytronMakerNanoRP2040 
+from _CytronMakerNanoRP2040 import CytronMakerNanoRP2040 
 from machine import Pin, ADC, PWM
 import neopixel
 import time
 import math
 import ujson as json
-from Sensors import Sensors
+from _LineFollowerSensors import Sensors
 from sys import exit
 
 
@@ -110,7 +110,7 @@ def turnBackLeft(board):
         
     board.LMOTOR_PWM.duty_u16(leftspeed)
     board.RMOTOR_PWM.duty_u16(rightspeed)         
-    time.sleep(0.9)        
+    time.sleep(1.0)        
     board.LMOTOR_PWM.duty_u16(0)
     board.RMOTOR_PWM.duty_u16(0)
 
