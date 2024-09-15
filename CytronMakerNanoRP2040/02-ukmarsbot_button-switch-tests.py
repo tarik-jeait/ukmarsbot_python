@@ -9,6 +9,7 @@ def detectSwitchPress(board):
     switch_pressed = 0
     while switch_pressed == 0:
         value = board.SWITCH.value()
+        print("value:%d"% value)
         if(value == 1):
             switch_pressed = 1
             print("switch pressed:%d"%switch_pressed)

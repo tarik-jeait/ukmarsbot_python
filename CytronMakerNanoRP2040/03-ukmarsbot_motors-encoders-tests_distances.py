@@ -23,16 +23,25 @@ updateTime=0
 updateInterval = 2;  # in milliseconds
 
 BASE_SPEED = 10000
+MOTOR_R_DIRECTION = 0
+MOTOR_L_DIRECTION = 0
+
 
 global COUNTS_PER_ROTATION, GEAR_RATIO, WHEEL_DIAMETER, WHEEL_SEPARATION,MM_PER_COUNT,DEG_PER_COUNT,encoderSum,encoderDifference
 
+# car with polulu motors
 COUNTS_PER_ROTATION = 12
-GEAR_RATIO = 51.45
-#GEAR_RATIO = 50
-WHEEL_DIAMETER = 33.0
-WHEEL_SEPARATION = 92.5
-
+#GEAR_RATIO = 51.45
+GEAR_RATIO = 50
+WHEEL_DIAMETER = 33
+WHEEL_SEPARATION = 92.0
 MM_PER_COUNT = (math.pi * WHEEL_DIAMETER) / (2 * COUNTS_PER_ROTATION * GEAR_RATIO);
+
+# car with chinese motors
+WHEEL_SEPARATION = 92.0
+MM_PER_COUNT = 0.075
+
+
 DEG_PER_COUNT = (360.0 * MM_PER_COUNT) / (math.pi * WHEEL_SEPARATION);
 
 def playTone(board):    
@@ -45,8 +54,9 @@ def playTone(board):
     
 # MOTORS
 def MoveForward(board,adjustment):
-    board.RMOTOR_DIR.value(0)  # set the right motor direction
-    board.LMOTOR_DIR.value(0)  # set the left motor direction   
+    print("MoveForward(board,adjustment)")
+    board.RMOTOR_DIR.value(0^MOTOR_R_DIRECTION)  # set the right motor direction
+    board.LMOTOR_DIR.value(0^MOTOR_L_DIRECTION)  # set the left motor direction   
     basespeed = BASE_SPEED
     adjustment = 0    
     leftspeed = int(basespeed + adjustment)
@@ -55,23 +65,37 @@ def MoveForward(board,adjustment):
     board.LMOTOR_PWM.duty_u16(leftspeed)
     board.RMOTOR_PWM.duty_u16(rightspeed)         
 
-def MoveBack(board,adjustment):
-    board.RMOTOR_DIR.value(1)  # set the right motor direction
-    board.LMOTOR_DIR.value(1)  # set the left motor direction   
+def MoveForwardDistance(board,distance):
+    print("MoveForwardDistance(board,distance)")
+    board.RMOTOR_DIR.value(0^MOTOR_R_DIRECTION)  # set the right motor direction
+    board.LMOTOR_DIR.value(0^MOTOR_L_DIRECTION)  # set the left motor direction   
     basespeed = BASE_SPEED
-    adjustment = 0    
+    adjustment = 0
     leftspeed = int(basespeed + adjustment)
     rightspeed = int(basespeed - adjustment)
-    
+    current_distance = 0
+    current_angle = 0
+    encoders_init()
+    encoders_print()
     board.LMOTOR_PWM.duty_u16(leftspeed)
-    board.RMOTOR_PWM.duty_u16(rightspeed) 
+    board.RMOTOR_PWM.duty_u16(rightspeed)         
+    while (distance-current_distance) > 0.2:        
+        encoderSum = m_left_counter + m_right_counter
+        encoderDifference = m_left_counter - m_right_counter
+        current_distance = MM_PER_COUNT * encoderSum;
+        current_angle = DEG_PER_COUNT * encoderDifference
+        time.sleep(0.01)    
+    print("distance : %f - angle:%f"%(current_distance,current_angle))
+    stopMotors(board)    
+
 def turnLeft(board):
+    print("turnLeft(board)")
     basespeed = BASE_SPEED
     adjustment = 0
     # Move Forward for 5 cm before turn left    
     # Turn Left
-    board.RMOTOR_DIR.value(0)  # set the right motor direction
-    board.LMOTOR_DIR.value(1)  # set the left motor direction
+    board.RMOTOR_DIR.value(0^MOTOR_R_DIRECTION)  # set the right motor direction
+    board.LMOTOR_DIR.value(1^MOTOR_R_DIRECTION)  # set the left motor direction
     
     leftspeed = int(basespeed+adjustment)
     rightspeed = int(basespeed - adjustment)
@@ -82,12 +106,40 @@ def turnLeft(board):
     time.sleep(0.5)        
     board.LMOTOR_PWM.duty_u16(0)
     board.RMOTOR_PWM.duty_u16(0)         
+
+def turnLeftAngle(board,angle):
+    basespeed = BASE_SPEED
+    adjustment = 0
+    # Move Forward for 5 cm before turn left    
+    # Turn Left
+    board.RMOTOR_DIR.value(0^MOTOR_R_DIRECTION)  # set the right motor direction
+    board.LMOTOR_DIR.value(1^MOTOR_R_DIRECTION)  # set the left motor direction
     
+    leftspeed = int(basespeed+adjustment)
+    rightspeed = int(basespeed - adjustment)
+
+    board.LMOTOR_PWM.duty_u16(leftspeed)
+    board.RMOTOR_PWM.duty_u16(rightspeed)         
+    current_distance = 0
+    current_angle = 0
+    encoders_init()
+    encoders_print()
+    board.LMOTOR_PWM.duty_u16(leftspeed)
+    board.RMOTOR_PWM.duty_u16(rightspeed)         
+    while (angle-current_angle) > 0.5:        
+        encoderSum = m_left_counter + m_right_counter
+        encoderDifference =  m_right_counter - m_left_counter
+        current_distance = MM_PER_COUNT * encoderSum;
+        current_angle = DEG_PER_COUNT * encoderDifference
+        time.sleep(0.01)    
+    print("distance : %f - angle:%f"%(current_distance,current_angle))
+    stopMotors(board)    
+
 def turnRight(board):
     basespeed = BASE_SPEED
     adjustment = 0
-    board.RMOTOR_DIR.value(1)  # set the right motor direction
-    board.LMOTOR_DIR.value(0)  # set the left motor direction
+    board.RMOTOR_DIR.value(1^MOTOR_R_DIRECTION)  # set the right motor direction
+    board.LMOTOR_DIR.value(0^MOTOR_R_DIRECTION)  # set the left motor direction
     
     leftspeed = int(basespeed+adjustment)
     rightspeed = int(basespeed - adjustment)
@@ -101,8 +153,8 @@ def turnRight(board):
 def turnBackLeft(board):
     basespeed = BASE_SPEED
     adjustment = 0
-    board.RMOTOR_DIR.value(0)  # set the right motor direction
-    board.LMOTOR_DIR.value(1)  # set the left motor direction
+    board.RMOTOR_DIR.value(0^MOTOR_R_DIRECTION)  # set the right motor direction
+    board.LMOTOR_DIR.value(1^MOTOR_R_DIRECTION)  # set the left motor direction
     
     leftspeed = int(basespeed + adjustment)
     rightspeed = int(basespeed - adjustment)
@@ -112,11 +164,36 @@ def turnBackLeft(board):
     time.sleep(1)        
     board.LMOTOR_PWM.duty_u16(0)
     board.RMOTOR_PWM.duty_u16(0)
+
 def stopMotors(board):
     board.LMOTOR_PWM.duty_u16(0)
     board.RMOTOR_PWM.duty_u16(0)
     
-
+def MoveForwardThenTurnRight(board):
+        print("MoveForward")
+        encoders_init()
+        encoders_print()
+        MoveForward(board,0)
+        time.sleep(0.5)
+        stopMotors(board)
+        encoders_print()
+        encoderSum = m_left_counter + m_right_counter
+        encoderDifference = m_left_counter - m_right_counter
+        distance = MM_PER_COUNT * encoderSum;
+        angle = DEG_PER_COUNT * encoderDifference
+        print("distance : %f - angle:%f"%(distance,angle))
+        time.sleep(2)        
+        encoders_init()
+        encoders_print()        
+        turnRight(board)
+        stopMotors(board)
+        encoders_print()
+        encoderSum = m_left_counter + m_right_counter
+        encoderDifference = m_left_counter - m_right_counter
+        distance = MM_PER_COUNT * encoderSum;
+        angle = DEG_PER_COUNT * encoderDifference
+        print("distance : %f - angle:%f"%(distance,angle))
+    
 #ENCODERS
 def encoders_enable_interrupts():    
     global left_oldA,left_oldB,right_oldA,right_oldB,ENCODER_LEFT_POLARITY,ENCODER_RIGHT_POLARITY,m_left_counter,m_right_counter
@@ -190,6 +267,8 @@ print("Testing motors ..........")
 print("Press ukmarsbot back switch to start........")
 print("###############################################")
 
+#print("MM_PER_COUNT:%f"%MM_PER_COUNT)
+
 switch_pressed = 0
 while switch_pressed == 0:
     # value = cytron_board.SWITCH.value()
@@ -199,30 +278,15 @@ while switch_pressed == 0:
         time.sleep(2)
         playTone(cytron_board)
         print("switch pressed:%d"%switch_pressed)
-        
-        print("MoveForward")
-        MoveForward(cytron_board,0)
-        time.sleep(0.5)
-        stopMotors(cytron_board)
-        encoders_print()
-        encoderSum = m_left_counter + m_right_counter
-        encoderDifference = m_left_counter - m_right_counter
-        distance = MM_PER_COUNT * encoderSum;
-        angle = DEG_PER_COUNT * encoderDifference
-
-        print("distance : %f - angle:%f"%(distance,angle))
-        time.sleep(2)
-        
-        encoders_init()
-        encoders_print()        
-        turnRight(cytron_board)
-        stopMotors(cytron_board)
-        encoders_print()
-        encoderSum = m_left_counter + m_right_counter
-        encoderDifference = m_left_counter - m_right_counter
-        distance = MM_PER_COUNT * encoderSum;
-        angle = DEG_PER_COUNT * encoderDifference
-        print("distance : %f - angle:%f"%(distance,angle))
+#         encoders_init()
+#         encoders_print()
+#         MoveForward(cytron_board,0)
+#         time.sleep(1)
+#         stopMotors(cytron_board)
+#         encoders_print()        
+        #MoveForwardThenTurnRight(cytron_board)
+        MoveForwardDistance(cytron_board,50)
+        #turnLeftAngle(cytron_board,90)
         switch_pressed = 1
     time.sleep(0.1)
 

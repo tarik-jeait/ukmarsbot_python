@@ -32,7 +32,7 @@ class CytronMakerNanoRP2040:
         self.btn1 = Pin(20, Pin.IN, Pin.PULL_UP)
         # define press button switch on UKMARS board next to 4 way switch which should be set to all on
         # Arduino A6 : FUNCTION_SELECT SWITCH
-        self.SWITCH = Pin(14, Pin.IN) # button / switch pin
+        self.SWITCH = Pin(14, Pin.IN,Pin.PULL_DOWN) # button / switch pin
 
         ###################################################################################
         ######## SOUND   ##################################################################

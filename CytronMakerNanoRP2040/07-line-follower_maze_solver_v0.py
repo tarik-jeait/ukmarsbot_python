@@ -237,7 +237,7 @@ def resolveMaze(board):
             print("CrossRoads...")
             stopMotors(board)
             sensors = readSensorsNormalized(board)
-            time.sleep(0.01)
+            time.sleep(0.2)
             #
             if(sensors.isRouteLeft()):
                 #MoveForward(board,0)
@@ -252,8 +252,7 @@ def resolveMaze(board):
                 else:
                     #turnLeft(board)
                     turnLeftAngle(board,80)
-                    #time.sleep(0.4)
-                    time.sleep(0.01)
+                    time.sleep(0.4)
                     MoveForward(board,0)
             else:
                 if(sensors.isRouteRight()):
@@ -268,8 +267,7 @@ def resolveMaze(board):
                         crossroads = True
                     else:
                         turnRight(board)
-                        #time.sleep(0.4)
-                        time.sleep(0.01)
+                        time.sleep(0.4)
                         MoveForward(board,0)
                 else:
                     stopMotors(board)
@@ -277,8 +275,7 @@ def resolveMaze(board):
         else:
             if(sensors.isBlackSurface()):
                 turnBackLeft(board)
-                #time.sleep(0.5)
-                time.sleep(0.01)
+                time.sleep(0.5)
                 MoveForward(board,0)
             else:
                 adjustment = 0
