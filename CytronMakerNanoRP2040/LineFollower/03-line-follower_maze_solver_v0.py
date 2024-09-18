@@ -4,7 +4,7 @@ import neopixel
 import time
 import math
 import ujson as json
-from _LineFollowerSensors import Sensors
+from CytronMakerNanoRP2040.LineFollower._Sensors import Sensors
 from sys import exit
 
 

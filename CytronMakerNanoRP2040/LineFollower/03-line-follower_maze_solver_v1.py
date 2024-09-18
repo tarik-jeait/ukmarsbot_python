@@ -4,7 +4,7 @@ import neopixel
 import time
 import math
 import ujson as json
-from _LineFollowerSensors import Sensors
+from _Sensors import Sensors
 from sys import exit
 
 
@@ -44,7 +44,7 @@ global updateTime,updateInterval
 updateTime=0
 updateInterval = 2  # in milliseconds
 
-BASE_SPEED = 10000
+BASE_SPEED = 8000
 MOTOR_R_DIRECTION = 0
 MOTOR_L_DIRECTION = 0
 
@@ -59,9 +59,21 @@ MM_PER_COUNT = (math.pi * WHEEL_DIAMETER) / (2 * COUNTS_PER_ROTATION * GEAR_RATI
 print("MM_PER_COUNT:%f"%(MM_PER_COUNT))
 # car with chinese motors
 WHEEL_SEPARATION = 93
+
 MM_PER_COUNT = 0.08
 
 DEG_PER_COUNT = (360.0 * MM_PER_COUNT) / (math.pi * WHEEL_SEPARATION);
+
+global MAZE_REGISTER
+MAZE_REGISTER = ""
+
+global MAZE_REGISTER_LIST
+MAZE_REGISTER_LIST = []
+
+global FINAL_REGISTER_PATH
+FINAL_REGISTER_PATH = []
+global SHORTEST_PATH
+SHORTEST_PATH = ""
 
   #  print (l1count, progno, bit0, bit1, bit2,)
 def checkspeed():
@@ -186,7 +198,7 @@ def turnRightAngle(board,angle):
     # Move Forward for 5 cm before turn left    
     # Turn Left
     board.RMOTOR_DIR.value(1^MOTOR_R_DIRECTION)  # set the right motor direction
-    board.LMOTOR_DIR.value(0^MOTOR_R_DIRECTION)  # set the left motor direction
+    board.LMOTOR_DIR.value(0^MOTOR_L_DIRECTION)  # set the left motor direction
     
     leftspeed = int(basespeed+adjustment)
     rightspeed = int(basespeed - adjustment)
@@ -224,6 +236,7 @@ def turnBackLeft(board):
     board.RMOTOR_PWM.duty_u16(0)
 
 def resolveMaze(board):
+    global MAZE_REGISTER
     # Move Forward
     MoveForward(board,0)    
     crossroads = False
@@ -251,6 +264,9 @@ def resolveMaze(board):
                     crossroads = True
                 else:
                     #turnLeft(board)
+                    MAZE_REGISTER = MAZE_REGISTER + "L"
+                    MAZE_REGISTER_LIST.append("L")
+                    
                     turnLeftAngle(board,80)
                     #time.sleep(0.4)
                     time.sleep(0.01)
@@ -267,15 +283,27 @@ def resolveMaze(board):
                         stopMotors(board)
                         crossroads = True
                     else:
-                        turnRight(board)
-                        #time.sleep(0.4)
-                        time.sleep(0.01)
-                        MoveForward(board,0)
+                        if(sensors_end.isRouteStraigth()):
+                            MAZE_REGISTER = MAZE_REGISTER + "S"
+                            MAZE_REGISTER_LIST.append("S")
+                            MoveForward(board,0)
+                        else:
+                            #turnRight(board)
+                            MAZE_REGISTER = MAZE_REGISTER + "R"
+                            MAZE_REGISTER_LIST.append("R")
+                            
+                            turnRightAngle(board,80)
+                            #time.sleep(0.4)
+                            time.sleep(0.01)
+                            MoveForward(board,0)
                 else:
                     stopMotors(board)
                     crossroads = True
         else:
             if(sensors.isBlackSurface()):
+                MAZE_REGISTER = MAZE_REGISTER + "B"
+                MAZE_REGISTER_LIST.append("B")
+
                 turnBackLeft(board)
                 #time.sleep(0.5)
                 time.sleep(0.01)
@@ -290,7 +318,146 @@ def resolveMaze(board):
                     adjustment = -5000
                 MoveForward(board,adjustment)
         time.sleep(0.01)
-       
+    save_maze_register()
+    calculate_shortest_path()
+    save_final_maze_register()
+
+def save_final_maze_register():
+    global FINAL_REGISTER_PATH
+    try:
+        with open('final_maze_register.txt', 'w') as f:
+            f.write(' '.join(FINAL_REGISTER_PATH))
+            f.close()
+    except:
+        print("Could not save data.")
+
+
+def followShortestPath(board):
+    global FINAL_REGISTER_PATH
+    # Move Forward
+    MoveForward(board,0)    
+    crossroads = False
+    CURRENT_DIRECTION = ""
+    while crossroads == False:
+        sensors = readSensorsNormalized(board)
+        print("L:%3.2f - LF:%3.2f - RF:%3.2f - R:%3.2f"% (sensors.leftside_normalized,sensors.leftfront_normalized,sensors.rightfront_normalized,sensors.rightside_normalized))
+        if(sensors.isCrossRoads() == True):            
+            # move few mm
+            #MoveForward(board,0)    
+            time.sleep(0.1)
+            print("CrossRoads...")
+            stopMotors(board)
+            sensors = readSensorsNormalized(board)
+            time.sleep(0.01)
+            CURRENT_DIRECTION = FINAL_REGISTER_PATH.pop(0)
+            if CURRENT_DIRECTION is None:
+                break
+            else:
+                if CURRENT_DIRECTION == "S":
+                    MoveForward(board,0)
+                    time.sleep(0.5)
+
+                else:
+                    if CURRENT_DIRECTION == "L":
+                        MoveForwardDistance(board,50)
+                        sensors_end = readSensorsNormalized(board)
+                        if(sensors_end.isTheEnd()):
+                            stopMotors(board)
+                            crossroads = True
+                        else:
+                            turnLeftAngle(board,80)
+                            #time.sleep(0.4)
+                            time.sleep(0.01)
+                            MoveForward(board,0)
+                            time.sleep(0.3)
+
+                       
+                    else:
+                        if CURRENT_DIRECTION == "R":
+                            MoveForwardDistance(board,50)
+                            # Check Again if it is the end
+                            sensors_end = readSensorsNormalized(board)
+                            if(sensors_end.isTheEnd()):
+                                stopMotors(board)
+                                crossroads = True
+                            else:
+                                turnRightAngle(board,80)
+                                time.sleep(0.01)
+                                MoveForward(board,0)
+                                time.sleep(0.3)
+        else:
+            if(sensors.isBlackSurface()):
+                stopMotors(board)
+            else:
+                adjustment = 0
+                # compute adjustment
+                gSensorDifference = sensors.rightfront - sensors.leftfront;
+                if(gSensorDifference > 2000):
+                    adjustment = 5000        
+                if(gSensorDifference < -2000):
+                    adjustment = -5000
+                MoveForward(board,adjustment)
+        time.sleep(0.01)
+    save_maze_register()
+
+
+def save_maze_register():
+    try:
+        with open('maze_register.txt', 'w') as f:
+            f.write(MAZE_REGISTER)
+            f.close()
+    except:
+        print("Could not save data.")
+
+def calculate_shortest_path():
+    global MAZE_REGISTER_LIST,FINAL_REGISTER_PATH
+    End_Of_List = False
+    CURRENT_DIRECTION = ""
+    CURRENT_PATH = []
+    NEW_PATH = ""
+    FINAL_REGISTER_PATH = []
+    while End_Of_List != True:
+        if len(MAZE_REGISTER_LIST) > 0 :
+            CURRENT_DIRECTION = MAZE_REGISTER_LIST.pop(0)
+            print("CURRENT_DIRECTION:%s"%CURRENT_DIRECTION)
+            CURRENT_PATH.append(CURRENT_DIRECTION)
+            print("CURRENT_PATH:%s"%CURRENT_PATH)
+            if(len(CURRENT_PATH) == 3):
+                NEW_PATH = optimize_path(CURRENT_PATH)
+                if(NEW_PATH is None):
+                    FINAL_REGISTER_PATH.append(CURRENT_PATH.pop(0))
+                else:
+                    FINAL_REGISTER_PATH.append(NEW_PATH)
+                    CURRENT_PATH = []
+        else:
+            End_Of_List = True        
+            # ADD remaining CURENT_PATH entries
+            #...
+    print("FINAL_REGISTER_PATH:%s"%FINAL_REGISTER_PATH)
+
+#LBR = B
+#LBS = R
+#RBL = B
+#SBL = R
+#SBS = B
+#LBL = S
+def optimize_path(path_list):
+    path = path_list[0]+path_list[1]+path_list[2]
+    if(path == "LBR"):
+        return "B"    
+    if(path == "LBS"):
+        return "R"    
+    if(path == "RBL"):
+        return "B"    
+    if(path == "SBL"):
+        return "R"    
+    if(path == "SBS"):
+        return "B"    
+    if(path == "LBL"):
+        return "S"    
+    return None    
+    
+
 ###################################################################################
 ######## Line follower code #######################################################
 ###################################################################################
@@ -330,10 +497,10 @@ def calibrateSensors(board):
     rightside_min = 10000
     rightside_max = 0
 
-    basespeed = 10000
+    basespeed = BASE_SPEED
     adjustment = 0
-    board.RMOTOR_DIR.value(1)  # set the right motor direction
-    board.LMOTOR_DIR.value(0)  # set the left motor direction
+    board.RMOTOR_DIR.value(1^MOTOR_R_DIRECTION)  # set the right motor direction
+    board.LMOTOR_DIR.value(0^MOTOR_L_DIRECTION)  # set the left motor direction
     
     leftspeed = int(basespeed + adjustment)
     rightspeed = int(basespeed - adjustment)
@@ -552,6 +719,8 @@ time.sleep(2)
 #MoveForwardDistance(cytron_board,53)
 #turnLeftAngle(cytron_board,80)
 
+#testReadSensorsNormalized(cytron_board)
+
 # configure irq callback
 #cytron_board.Leftenc1.irq(lambda p:leftcount())
 #cytron_board.Rightenc1.irq(lambda p:rightcount())
@@ -600,6 +769,30 @@ while (button_pressed == 0): # Check button 1 (GP20)
         print("car_switch:%d"%car_switch)
         time.sleep(2)
         resolveMaze(cytron_board)
+    time.sleep(0.1)
+
+
+time.sleep(2)
+
+# Play tone
+PIEZO_PWM = machine.PWM(machine.Pin(22))
+PIEZO_PWM.freq(440)
+PIEZO_PWM.duty_u16(30000) # in range 0 to 65535
+time.sleep(0.5)
+PIEZO_PWM.duty_u16(0)
+
+print("Follow Sortest Path....")
+
+# THIRD LOOP FOR MAZE SOLVER
+button_pressed = 0
+while (button_pressed == 0): # Check button 1 (GP20)
+    card_button = cytron_board.btn1.value()
+    if(card_button == 0):
+        button_pressed = 1
+        print("button_pressed:%d"%button_pressed)
+        print("car_switch:%d"%car_switch)
+        time.sleep(2)
+        followShortestPath(cytron_board)
         button_pressed = 0
     time.sleep(0.1)
 
