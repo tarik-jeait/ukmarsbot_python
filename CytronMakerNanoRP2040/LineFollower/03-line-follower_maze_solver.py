@@ -241,7 +241,7 @@ def followShortestPath(board):
                     adjustment = -5000
                 ukmarsbot_motors.MoveForward(adjustment)
         time.sleep(0.01)
-    save_maze_register()
+    
 
 
 def save_maze_register():
@@ -276,6 +276,8 @@ def calculate_shortest_path():
             End_Of_List = True        
             # ADD remaining CURENT_PATH entries
             #...
+            if len(CURRENT_PATH)>0:
+                FINAL_REGISTER_PATH.extend(CURRENT_PATH)
     print("FINAL_REGISTER_PATH:%s"%FINAL_REGISTER_PATH)
 
 #LBR = B
@@ -366,6 +368,11 @@ ukmarsbot_encoders.init()
 
 # Play tone
 play_tone()
+
+MAZE_REGISTER_LIST=["L","L","B","L","R","S","B","L","L","R"]
+calculate_shortest_path()
+save_final_maze_register()
+
 
 time.sleep(2)
 #MoveForwardDistance(cytron_board,53)
